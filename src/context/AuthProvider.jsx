@@ -1,12 +1,11 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { getAuth } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase/config';
 
 export const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState({});
 	const navigate = useNavigate();
-	const auth = getAuth();
 
 	useEffect(() => {
 		const unsubcribed = auth.onIdTokenChanged((user) => {
