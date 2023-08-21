@@ -1,21 +1,18 @@
-import { Grid } from '@mui/material';
-import React from 'react';
+import { Col, Row } from 'antd';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 
-const Home = () => {
+export default function Home() {
 	return (
 		<div>
-			<Grid container spacing={2}>
-				<Grid item xs={3}>
+			<Row>
+				<Col span={6}>
 					<Sidebar />
-				</Grid>
-				<Grid item xs={9}>
+				</Col>
+				<Col span={18}>
 					<ChatWindow />
-				</Grid>
-			</Grid>
+				</Col>
+			</Row>
 		</div>
 	);
-};
-
-export default Home;
+}

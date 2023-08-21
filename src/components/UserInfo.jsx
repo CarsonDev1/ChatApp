@@ -1,15 +1,15 @@
-import { Avatar, Button, Typography } from '@mui/material';
-import React, { useContext } from 'react';
+import React from 'react';
+import { Button, Avatar, Typography } from 'antd';
 import styled from 'styled-components';
-import { AuthContext } from '../context/AuthProvider';
+
 import { auth } from '../firebase/config';
+import { AuthContext } from '../context/AuthProvider';
 
 const WrapperStyled = styled.div`
 	display: flex;
 	justify-content: space-between;
 	padding: 12px 16px;
 	border-bottom: 1px solid rgba(82, 38, 83);
-	border-color: white;
 
 	.username {
 		color: white;
@@ -17,24 +17,22 @@ const WrapperStyled = styled.div`
 	}
 `;
 
-const UserInfo = () => {
+export default function UserInfo() {
 	const {
 		user: { displayName, photoURL },
-	} = useContext(AuthContext);
+	} = React.useContext(AuthContext);
 	const handleSignOut = () => {
 		auth.signOut();
 	};
 	return (
 		<WrapperStyled>
-			<div style={{ display: 'flex', alignItems: 'center' }}>
-				<Avatar src={photoURL}>{photoURL ? '' : displayName?.charAt(0)?.toUpperCase()}</Avatar>
-				<Typography className='username'>{displayName}</Typography>
+			<div>
+				<Avatar size='large' src={photoURL}>
+					{photoURL ? '' : displayName?.charAt(0)?.toUpperCase()}
+				</Avatar>
+				<Typography.Text className='username'>{displayName}</Typography.Text>
 			</div>
-			<Button variant='outlined' onClick={handleSignOut}>
-				Sign Out
-			</Button>
+			<Button onClick={handleSignOut}>Log Out</Button>
 		</WrapperStyled>
 	);
-};
-
-export default UserInfo;
+}

@@ -1,15 +1,19 @@
-import { Outlet, createBrowserRouter } from 'react-router-dom';
+import { Outlet, createBrowserRouter, Route } from 'react-router-dom'; // Import Route
 import Login from '../pages/Login';
 import Home from '../pages/Home';
 import AuthProvider from '../context/AuthProvider';
 import ProtectedRoute from './ProtectedRoute';
 import AppProvider from '../context/AppProvider';
+import AddRoom from '../components/AddRoom';
+import InviteMember from '../components/InviteMember';
 
 const AuthLayout = () => {
 	return (
 		<AuthProvider>
 			<AppProvider>
 				<Outlet />
+				<AddRoom />
+				<InviteMember />
 			</AppProvider>
 		</AuthProvider>
 	);
@@ -30,12 +34,12 @@ export default createBrowserRouter([
 						element: <Home />,
 						path: '/',
 					},
+					// {
+					// 	element: <Video />,
+					// 	path: '/video',
+					// },
 				],
 			},
-			// {
-			// 	element: <Home />,
-			// 	path: '/',
-			// },
 		],
 	},
 ]);

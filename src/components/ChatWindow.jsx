@@ -1,7 +1,11 @@
-import { PersonAddAltOutlined } from '@mui/icons-material';
-import { Avatar, AvatarGroup, Button, InputBase, Tooltip } from '@mui/material';
-import React from 'react';
+import { Alert, Avatar, Button, Form, Input, Tooltip } from 'antd';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
+import { AppContext } from '../context/AppProvider';
+import { addDocument } from '../firebase/services';
+import { AuthContext } from '../context/AuthProvider';
+import useFirestore from '../hooks/useFirestore';
+import { UserAddOutlined } from '@ant-design/icons';
 import Message from './Message';
 
 const HeaderStyled = styled.div`
@@ -10,7 +14,7 @@ const HeaderStyled = styled.div`
 	height: 56px;
 	padding: 0 16px;
 	align-items: center;
-	border-bottom: 1px solid rgba(230, 230, 230);
+	border-bottom: 1px solid rgb(230, 230, 230);
 
 	.header {
 		&__info {
@@ -18,19 +22,23 @@ const HeaderStyled = styled.div`
 			flex-direction: column;
 			justify-content: center;
 		}
+
 		&__title {
 			margin: 0;
 			font-weight: bold;
 		}
+
 		&__description {
 			font-size: 12px;
 		}
 	}
 `;
+
 const ButtonGroupStyled = styled.div`
 	display: flex;
 	align-items: center;
 `;
+
 const WrapperStyled = styled.div`
 	height: 100vh;
 `;
@@ -42,15 +50,16 @@ const ContentStyled = styled.div`
 	padding: 11px;
 	justify-content: flex-end;
 `;
-const FormStyled = styled.div`
+
+const FormStyled = styled(Form)`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	padding: 2px 2px 2px 0;
-	border: 1px solid rgba(230, 230, 230);
+	border: 1px solid rgb(230, 230, 230);
 	border-radius: 2px;
 
-	.form-item {
+	.ant-form-item {
 		flex: 1;
 		margin-bottom: 0;
 	}
@@ -61,46 +70,117 @@ const MessageListStyled = styled.div`
 	overflow-y: auto;
 `;
 
-const ChatWindow = () => {
+export default function ChatWindow() {
+	const { selectedRoom, members, setIsInviteMemberVisible } = useContext(AppContext);
+	const {
+		user: { uid, photoURL, displayName },
+	} = useContext(AuthContext);
+	const [inputValue, setInputValue] = useState('');
+	const [form] = Form.useForm();
+	const inputRef = useRef(null);
+	const messageListRef = useRef(null);
+
+	const handleInputChange = (e) => {
+		setInputValue(e.target.value);
+	};
+
+	const handleOnSubmit = () => {
+		addDocument('messages', {
+			text: inputValue,
+			uid,
+			photoURL,
+			roomId: selectedRoom.id,
+			displayName,
+		});
+
+		form.resetFields(['message']);
+
+		// focus to input again after submit
+		if (inputRef?.current) {
+			setTimeout(() => {
+				inputRef.current.focus();
+			});
+		}
+	};
+
+	const condition = React.useMemo(
+		() => ({
+			fieldName: 'roomId',
+			operator: '==',
+			compareValue: selectedRoom.id,
+		}),
+		[selectedRoom.id]
+	);
+
+	const messages = useFirestore('messages', condition);
+
+	useEffect(() => {
+		// scroll to bottom after message changed
+		if (messageListRef?.current) {
+			messageListRef.current.scrollTop = messageListRef.current.scrollHeight + 50;
+		}
+	}, [messages]);
+
 	return (
 		<WrapperStyled>
-			<HeaderStyled>
-				<div className='header__info'>
-					<span className='header__title'>Room 1</span>
-					<p className='header__description'>This is room 1</p>
-				</div>
-				<ButtonGroupStyled>
-					<Button startIcon={<PersonAddAltOutlined />}>Add</Button>
-					<AvatarGroup max={3}>
-						<Tooltip title='A'>
-							<Avatar>D</Avatar>
-						</Tooltip>
-						<Tooltip title='B'>
-							<Avatar>B</Avatar>
-						</Tooltip>
-						<Tooltip title='C'>
-							<Avatar>C</Avatar>
-						</Tooltip>
-						<Tooltip title='D'>
-							<Avatar>D</Avatar>
-						</Tooltip>
-					</AvatarGroup>
-				</ButtonGroupStyled>
-			</HeaderStyled>
-			<ContentStyled>
-				<MessageListStyled>
-					<Message text='Text1' photoUrl={null} displayName='Tinh' createAt={12000} />
-					<Message text='Text2' photoUrl={null} displayName='Tinh ne' createAt={12002} />
-					<Message text='Text3' photoUrl={null} displayName='Tinh luon' createAt={12030} />
-					<Message text='Text4' photoUrl={null} displayName='Tinh day' createAt={12300} />
-				</MessageListStyled>
-				<FormStyled>
-					<InputBase sx={{ ml: 1, flex: 1 }} autoComplete='off' placeholder='Aa' />
-					<Button variant='contained'>Send</Button>
-				</FormStyled>
-			</ContentStyled>
+			{selectedRoom.id ? (
+				<>
+					<HeaderStyled>
+						<div className='header__info'>
+							<p className='header__title'>{selectedRoom.name}</p>
+							<span className='header__description'>{selectedRoom.description}</span>
+						</div>
+						<ButtonGroupStyled>
+							<Button
+								icon={<UserAddOutlined />}
+								type='text'
+								onClick={() => setIsInviteMemberVisible(true)}
+							>
+								Invite
+							</Button>
+							<Avatar.Group size='small' maxCount={2}>
+								{members.map((member) => (
+									<Tooltip title={member.displayName} key={member.id}>
+										<Avatar src={member.photoURL}>
+											{member.photoURL ? '' : member.displayName?.charAt(0)?.toUpperCase()}
+										</Avatar>
+									</Tooltip>
+								))}
+							</Avatar.Group>
+						</ButtonGroupStyled>
+					</HeaderStyled>
+					<ContentStyled>
+						<MessageListStyled ref={messageListRef}>
+							{messages.map((mes) => (
+								<Message
+									key={mes.id}
+									text={mes.text}
+									photoURL={mes.photoURL}
+									displayName={mes.displayName}
+									createdAt={mes.createdAt}
+								/>
+							))}
+						</MessageListStyled>
+						<FormStyled form={form}>
+							<Form.Item name='message'>
+								<Input
+									ref={inputRef}
+									onChange={handleInputChange}
+									onPressEnter={handleOnSubmit}
+									placeholder='aA...'
+									bordered={false}
+									autoComplete='off'
+								/>
+							</Form.Item>
+							<Button type='primary' onClick={handleOnSubmit}>
+								Send
+							</Button>
+						</FormStyled>
+					</ContentStyled>
+				</>
+			) : (
+				<Alert message='Hãy chọn phòng' type='info' showIcon style={{ margin: 5 }} closable />
+			)}
 		</WrapperStyled>
 	);
-};
-
-export default ChatWindow;
+}

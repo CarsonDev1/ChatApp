@@ -1,42 +1,55 @@
-import { ExpandLess, ExpandMore, GroupAddOutlined, MeetingRoomOutlined, StarBorder } from '@mui/icons-material';
-import { Collapse, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
-import React, { useContext } from 'react';
+import { Button, Collapse, Typography } from 'antd';
+import { PlusSquareOutlined } from '@ant-design/icons';
+import React from 'react';
+import styled from 'styled-components';
 import { AppContext } from '../context/AppProvider';
 
-const RoomList = () => {
-	const { rooms } = useContext(AppContext);
-	const [open, setOpen] = React.useState(true);
+const { Panel } = Collapse;
 
-	const handleClick = () => {
-		setOpen(!open);
+const PanelStyled = styled(Panel)`
+	&&& {
+		.ant-collapse-header,
+		p {
+			color: white;
+		}
+
+		.ant-collapse-content-box {
+			padding: 0 40px;
+		}
+
+		.add-room {
+			color: white;
+			padding: 0;
+		}
+	}
+`;
+
+const LinkStyled = styled(Typography.Link)`
+	display: block;
+	margin-bottom: 5px;
+	color: white;
+`;
+
+export default function RoomList() {
+	const { rooms, setIsAddRoomVisible, setSelectedRoomId } = React.useContext(AppContext);
+
+	const handleAddRoom = () => {
+		setIsAddRoomVisible(true);
+		console.log('add');
 	};
 
 	return (
-		<List>
-			<ListItemButton onClick={handleClick}>
-				<ListItemIcon>
-					<MeetingRoomOutlined />
-				</ListItemIcon>
-				<ListItemText primary='List Room' />
-				{open ? <ExpandLess /> : <ExpandMore />}
-			</ListItemButton>
-			<Collapse in={open} timeout='auto' unmountOnExit>
-				<List component='div' disablePadding>
-					{rooms.map((room) => (
-						<ListItemButton sx={{ pl: 4, display: 'block', marginBottom: '5px' }}>
-							<ListItemText primary={room.name} />
-						</ListItemButton>
-					))}
-					<ListItemButton sx={{ pl: 4 }}>
-						<ListItemIcon>
-							<GroupAddOutlined />
-						</ListItemIcon>
-						<ListItemText primary='Add Room' />
-					</ListItemButton>
-				</List>
-			</Collapse>
-		</List>
+		<Collapse ghost defaultActiveKey={['1']}>
+			<PanelStyled header='Room List' key='1'>
+				{rooms.map((room) => (
+					<LinkStyled key={room.id} onClick={() => setSelectedRoomId(room.id)}>
+						{room.name}
+					</LinkStyled>
+				))}
+				<Button type='text' icon={<PlusSquareOutlined />} className='add-room' onClick={handleAddRoom}>
+					Add Room
+				</Button>
+			</PanelStyled>
+		</Collapse>
 	);
-};
-
-export default RoomList;
+}

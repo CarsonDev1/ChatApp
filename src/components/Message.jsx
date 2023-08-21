@@ -1,36 +1,52 @@
-import { Avatar, Typography } from '@mui/material';
 import React from 'react';
+import { Avatar, Typography } from 'antd';
 import styled from 'styled-components';
+import { formatRelative } from 'date-fns/esm';
 
 const WrapperStyled = styled.div`
 	margin-bottom: 10px;
+
 	.author {
 		margin-left: 5px;
 		font-weight: bold;
 	}
+
 	.date {
 		margin-left: 10px;
 		font-size: 11px;
 		color: #a7a7a7;
 	}
+
 	.content {
 		margin-left: 30px;
 	}
 `;
 
-const Message = ({ text, displayName, createAt, photoUrl }) => {
+function formatDate(seconds) {
+	let formattedDate = '';
+
+	if (seconds) {
+		formattedDate = formatRelative(new Date(seconds * 1000), new Date());
+
+		formattedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+	}
+
+	return formattedDate;
+}
+
+export default function Message({ text, displayName, createdAt, photoURL }) {
 	return (
 		<WrapperStyled>
-			<div style={{ display: 'flex', alignItems: 'center' }}>
-				<Avatar src={photoUrl}>T</Avatar>
-				<Typography className='author'>{displayName}</Typography>
-				<Typography className='date'>{createAt}</Typography>
+			<div>
+				<Avatar size='small' src={photoURL}>
+					{photoURL ? '' : displayName?.charAt(0)?.toUpperCase()}
+				</Avatar>
+				<Typography.Text className='author'>{displayName}</Typography.Text>
+				<Typography.Text className='date'>{formatDate(createdAt?.seconds)}</Typography.Text>
 			</div>
 			<div>
-				<Typography className='content'>{text}</Typography>
+				<Typography.Text className='content'>{text}</Typography.Text>
 			</div>
 		</WrapperStyled>
 	);
-};
-
-export default Message;
+}
